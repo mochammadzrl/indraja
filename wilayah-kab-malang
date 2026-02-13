@@ -1,0 +1,7 @@
+//  Menampilkan wilyah Kabupaten Malang
+var malang = ee.FeatureCollection('FAO/GAUL/2015/level2')
+  .filter(ee.Filter.eq('ADM0_NAME', 'Indonesia'))
+  .filter(ee.Filter.eq('ADM2_NAME', 'Malang'));
+
+Map.centerObject(malang, 9);
+Map.addLayer(malang, {color: 'red'}, 'Kabupaten Malang');
