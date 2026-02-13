@@ -1,0 +1,60 @@
+//OVERLAY MODIS
+// 1.Batas wilayah Kabupaten Malang
+var admin = ee.FeatureCollection('FAO/GAUL/2015/level2')
+
+var malang = admin.filter (
+  ee.Filter.and(
+   ee.Filter.eq('ADM0_NAME', 'Indonesia'),
+   ee.Filter.eq('ADM2_NAME', 'Malang')
+   )
+);
+
+// 2. MODIS (belum di-clip)
+var modis = ee.ImageCollection('MODIS/061/MOD09GA')
+  .filterBounds (malang)
+  .filterDate ('2024-01-01' , '2024-12-31')
+  .map (function(img){
+    //Scale factor reflektasi permukaan MODIS
+    var optical = img.select ([
+        'sur_refl_b01' , //Red
+        'sur_refl_b04' , //Green
+        'sur_refl_b03' , //Blue
+      ])
+    .multiply (0.0001);
+  return img.addBands (optical, null, true);
+  })
+  .median();
+  
+// 3. Clip citra ke batas wilayah
+var modis_clip = modis.clip(malang);
+
+// 4. Visualisasi
+var visRGB = {
+  bands: ['sur_refl_b01' , 'sur_refl_b04' , 'sur_refl_b03'],
+  min: 0,
+  max: 0.3
+};
+
+Map.centerObject(malang, 9);
+
+//Citra sebelum clip
+Map.addLayer(modis, visRGB, 'MODIS (sebelum clip)');
+
+// Citra sesudah clip
+Map.addLayer(modis_clip, visRGB, 'MODIS (sesudah clip)');
+
+//Batas wilayah
+Map.addLayer(malang.style({
+  color: 'red' ,
+  fillColor: '00000000' ,
+  width: 2
+}), {} , 'Batas Kab. malang');
+var panel = ui.Panel({
+  style: {position: 'bottom-left'}
+});
+
+panel.add(ui.Label('Nama: Mochammad Azriel'));
+panel.add(ui.Label('NIM: 230322602022'));
+panel.add(ui.Label('Praktikum GEE'));
+
+Map.add(panel)
