@@ -1,0 +1,57 @@
+//OVERLAY LANDSAT 8
+// 1.Batas wilayah Kabupaten Malang
+var admin = ee.FeatureCollection('FAO/GAUL/2015/level2')
+
+var malang = admin.filter (
+  ee.Filter.and(
+   ee.Filter.eq('ADM0_NAME', 'Indonesia'),
+   ee.Filter.eq('ADM2_NAME', 'Malang')
+   )
+);
+
+// 2. Landsat 8 (belum di-clip)
+var l8 = ee.ImageCollection('LANDSAT/LC08/C02/T1_L2')
+  .filterBounds (malang)
+  .filterDate ('2024-01-01' , '2024-12-31')
+  .filter(ee.Filter.lt('CLOUD_COVER' , 10))
+  .map (function(img){
+    var optical = img.select(['SR_B2' , 'SR_B3' , 'SR_B4'])
+    .multiply (0.0000275)
+    .add (-0.2);
+  return img.addBands (optical, null, true);
+  })
+  .median();
+  
+// 3. Clip citra ke batas wilayah
+var l8_clip = l8.clip(malang);
+
+// 4. Visualisasi
+var visRGB = {
+  bands: ['SR_B2' , 'SR_B3' , 'SR_B4'],
+  min: 0,
+  max: 0.3
+};
+
+Map.centerObject(malang, 9);
+
+//Citra sebelum clip
+Map.addLayer(l8, visRGB, 'Landsat 8 (belum di-clip)');
+
+// Citra sesudah clip
+Map.addLayer(l8_clip, visRGB, 'Landsat 8 (sesudah clip)');
+
+//Batas wilayah
+Map.addLayer(malang.style({
+  color: 'red' ,
+  fillColor: '00000000' ,
+  width: 2
+}), {} , 'Batas Kab. malang');
+var panel = ui.Panel({
+  style: {position: 'bottom-left'}
+});
+
+panel.add(ui.Label('Nama: Mochammad Azriel'));
+panel.add(ui.Label('NIM: 230322602022'));
+panel.add(ui.Label('Praktikum GEE'));
+
+Map.add(panel)
