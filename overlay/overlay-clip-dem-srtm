@@ -1,0 +1,55 @@
+//OVERLAY DEM SRTM
+// 1.Batas wilayah Kabupaten Malang
+var admin = ee.FeatureCollection('FAO/GAUL/2015/level2')
+
+var malang = admin.filter (
+  ee.Filter.and(
+   ee.Filter.eq('ADM0_NAME', 'Indonesia'),
+   ee.Filter.eq('ADM2_NAME', 'Malang')
+   )
+);
+
+// 2. DEM SRTM (belum di-clip)
+var dem = ee.Image ('USGS/SRTMGL1_003')
+  
+// 3. Clip citra ke batas wilayah
+var dem_clip = dem.clip(malang);
+
+// 4. Visualisasi
+var visDEM = {
+  min: 0,
+  max: 3000,
+  palette: [
+    'blue' ,
+    'cyan' ,
+    'green' ,
+    'yellow' ,
+    'orange' ,
+    'red' ,
+    ]
+};
+
+Map.centerObject(malang, 9);
+
+//Layer citra
+Map.addLayer(dem, visDEM, 'DEM SRTM (sebelum clip)');
+
+// Citra sesudah clip
+Map.addLayer(dem_clip, visDEM, 'DEM SRTM (sesudah clip)');
+
+//Batas wilayah
+Map.addLayer(malang.style({
+  color: 'black' ,
+  fillColor: '00000000' ,
+  width: 2
+}), {} , 'Batas Kab. malang');
+
+var panel = ui.Panel({
+  style: {position: 'bottom-left'}
+});
+
+panel.add(ui.Label('Nama: Mochammad Azriel'));
+panel.add(ui.Label('NIM: 230322602022'));
+panel.add(ui.Label('Praktikum GEE'));
+
+Map.add(panel)
